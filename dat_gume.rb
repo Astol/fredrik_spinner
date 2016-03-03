@@ -20,6 +20,10 @@ class GameWindow < Gosu::Window
     else
       @player.x_vel = 0
     end
+    if Gosu::button_down? Gosu::KbUp then
+      @player.y_vel = -15
+      @player.jumping = true
+    end
     @player.move
     @player.update
     @enemys.each do |b|
@@ -88,7 +92,7 @@ end
 
 
 class Fredrik
-  attr_accessor :x,:y,:x_vel,:velocity
+  attr_accessor :x,:y,:x_vel,:velocity, :jumping, :y_vel
   def initialize
     @cl_animation = [Gosu::Image.new("kitty_L1.png"), Gosu::Image.new("kitty_L2.png"), Gosu::Image.new("kitty_L3.png")]
     @cr_animation = [Gosu::Image.new("kitty_R1.png"), Gosu::Image.new("kitty_R2.png"), Gosu::Image.new("kitty_R3.png")]
@@ -107,11 +111,16 @@ class Fredrik
     @x_vel = 0
     @direction_left = true
     @count = 0
+
+    @jumping = false
+    @y_vel = 0
   end
 
   def gethitbox
     return [@x, @y, 142, 212]
   end
+
+
 
   def update
     @count += 1
@@ -134,6 +143,15 @@ class Fredrik
   end
 
   def move
+    if @jumping then
+      @y_vel += 1
+      @y += @y_vel
+      @by += @y_vel
+      if @y_vel == 0 then
+        @jumping = false
+      end
+    end
+
     if !(@x_vel == 0) then
       @x += @x_vel
       if @x > 650 then
