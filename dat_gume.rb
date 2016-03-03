@@ -3,11 +3,12 @@ require 'gosu'
 
 class GameWindow < Gosu::Window
   def initialize
-    super 800, 1000
+    super 800, 1010
     srand(1337)
     self.caption = "Fredrik spinner"
 
     @player = Fredrik.new
+    @stats = Stats.new
     @enemys = []
   end
 
@@ -20,6 +21,7 @@ class GameWindow < Gosu::Window
       @player.x_vel = 0
     end
     @player.move
+    @player.update
     @enemys.each do |b|
       b.update
     end
@@ -32,6 +34,7 @@ class GameWindow < Gosu::Window
     @enemys.each do |b|
       b.draw
     end
+    @stats.draw
 #kitty-X 80px under. Y- 160 över
   #  @kitty.draw(380,900,0)
   #  @freedy_img.draw(300,740,0)
@@ -47,6 +50,7 @@ class GameWindow < Gosu::Window
     @enemys.each do |b|
       if intersects?(@player.gethitbox, b.gethitbox)
         b.killed = true
+        @player.velocity += 1
       end
     end
     @enemys.keep_if do |b| !b.killed end
@@ -58,22 +62,55 @@ class GameWindow < Gosu::Window
 
 end
 
-class Fredrik
-  attr_accessor :x,:y,:x_vel
+class Stats
+  attr_accessor :time, :rpm
   def initialize
-    @c_animation = ["kitty_L1.png", "kitty_L2.png", "kitty_L3"]
-    @fredrik_head = Gosu::Image.new("freddy_L.png")
-    @cat = Gosu::Image.new("kitty_L1.png")
+    @time = 0
+    @rpm = 0
+    @font = Gosu::Font.new(64)
+  end
+
+  def draw
+    @font.draw("RPM: " + @rpm.to_s, 0, 66, 0)
+    @font.draw("TIME: " + @time.to_s, 0, 0, 0)
+  end
+end
+
+
+class Fredrik
+  attr_accessor :x,:y,:x_vel,:velocity
+  def initialize
+    @cl_animation = [Gosu::Image.new("kitty_L1.png"), Gosu::Image.new("kitty_L2.png"), Gosu::Image.new("kitty_L3.png")]
+    @cr_animation = [Gosu::Image.new("kitty_R1.png"), Gosu::Image.new("kitty_R2.png"), Gosu::Image.new("kitty_R3.png")]
+    @fredrik_left = Gosu::Image.new("freddy_L.png")
+    @fredrik_right = Gosu::Image.new("freddy_R.png")
+    @fredrik_head = @fredrik_left
+    @current_img = 0
+    @cat = @cl_animation[@current_img]
     @x = 380
     @y = 780
+    @rotation = 0
+    @velocity = 0
     @bx = @x + 80
     @by = @y +160
     @x_vel = 0
     @direction_left = true
+    @count = 0
   end
 
   def gethitbox
     return [@x, @y, 142, 212]
+  end
+
+  def update
+    @count += 1
+    @rotation += @velocity
+    @rotation %= 360
+    if @count == 30 && @velocity != 0 then
+      @count = 0
+      #TODO:: ändra animation, fixa med listor
+    end
+
   end
 
   def move
@@ -82,9 +119,9 @@ class Fredrik
       @x %= 800
     else
       if !@direction_left then
-        @cat = Gosu::Image.new("kitty_R1.png")
+        @cat = @cr_animation[0]
       else
-        @cat = Gosu::Image.new("kitty_L1.png")
+        @cat = @cl_animation[0]
       end
     end
 
@@ -107,7 +144,7 @@ class Fredrik
   end
 
   def draw
-    @fredrik_head.draw(@x, @y, 2)
+    @fredrik_head.draw_rot(@x + 79, @y + 124, 2, @rotation)
     @cat.draw(@bx, @by, 1)
   end
 end
